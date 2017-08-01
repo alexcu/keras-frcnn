@@ -19,16 +19,19 @@ parser = OptionParser()
 parser.add_option("-p", "--path", dest="test_path", help="Path to test data.")
 parser.add_option("-n", "--num_rois", dest="num_rois",
 				help="Number of ROIs per iteration. Higher means more memory use.", default=32)
+parser.add_option("-o", "--output_dir", dest="output_dir", help="Output of test images")
 parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to read the metadata related to the training (generated when training).",
 				default="config.pickle")
 parser.add_option("--network", dest="network", help="Base network to use. Supports vgg or resnet50.", default='resnet50')
 
+
 (options, args) = parser.parse_args()
 
 if not options.test_path:   # if filename is not given
 	parser.error('Error: path to test data must be specified. Pass --path to command line')
-
+if not options.output_dir:
+        parser.error('Error: no output path specified!')
 
 config_output_filename = options.config_filename
 
@@ -218,7 +221,7 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 			probs[cls_name].append(np.max(P_cls[0, ii, :]))
 
 	all_dets = []
-
+        print(len(bboxes))
 	for key in bboxes:
 		bbox = np.array(bboxes[key])
 
@@ -242,6 +245,8 @@ for idx, img_name in enumerate(sorted(os.listdir(img_path))):
 
 	print('Elapsed time = {}'.format(time.time() - st))
 	print(all_dets)
-	cv2.imshow('img', img)
-	cv2.waitKey(0)
-	# cv2.imwrite('./results_imgs/{}.png'.format(idx),img)
+	#cv2.imshow('img', img)
+        #cv2.waitKey(0)
+        out_file = '%s/%s.png' % (options.output_dir, idx)
+        print("Writing to %s", out_file)
+	cv2.imwrite(out_file, img)
