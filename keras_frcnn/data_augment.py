@@ -9,11 +9,11 @@ def augment(img_data, config, augment=True):
 	assert 'width' in img_data
 	assert 'height' in img_data
 
+	img_data_aug = copy.deepcopy(img_data)
+
+	img = cv2.imread(img_data_aug['filepath'])
+
 	if augment:
-		img_data_aug = copy.deepcopy(img_data)
-
-		img = cv2.imread(img_data_aug['filepath'])
-
 		rows, cols = img.shape[:2]
 
 		if config.use_horizontal_flips and np.random.randint(0, 2) == 0:
@@ -64,12 +64,10 @@ def augment(img_data, config, augment=True):
 					bbox['x1'] = rows - y2
 					bbox['x2'] = rows - y1
 					bbox['y1'] = x1
-					bbox['y2'] = x2
+					bbox['y2'] = x2        
 				elif angle == 0:
 					pass
 
-		img_data_aug['width'] = img.shape[1]
-		img_data_aug['height'] = img.shape[0]
-		return img_data_aug, img
-	else:
-		return img_data, img_data
+	img_data_aug['width'] = img.shape[1]
+	img_data_aug['height'] = img.shape[0]
+	return img_data_aug, img
