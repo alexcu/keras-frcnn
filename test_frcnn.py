@@ -5,6 +5,7 @@ import numpy as np
 import sys
 import pickle
 from optparse import OptionParser
+import json
 import time
 from keras_frcnn import config
 from keras import backend as K
@@ -36,6 +37,10 @@ parser.add_option(
     dest="network",
     help="Base network to use. Supports vgg or resnet50.",
     default='resnet50')
+
+parser.add_option("--hyperparams_filename", dest="hyperparams_filename", help=
+                                                  "Location to store all the hyperparms related to the training (to be used when testing).",
+                                                  default="hyperparams.json")
 
 (options, args) = parser.parse_args()
 
@@ -158,6 +163,10 @@ classifier = nn.classifier(
 
 model_rpn = Model(img_input, rpn_layers)
 model_classifier = Model([feature_map_input, roi_input], classifier)
+
+with open(options.hyperparams_filename, 'wb') as hp_f:
+            json.dump({"model_rpn": json.loads(model_rpn.to_json()),
+                       "model_classifier": json.loads(model_classifier.to_json())}, hp_f)
 
 print('Loading weights from {}'.format(C.model_path))
 model_rpn.load_weights(C.model_path, by_name=True)

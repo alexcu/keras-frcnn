@@ -33,7 +33,10 @@ parser.add_option("--rot", "--rot_90", dest="rot_90", help="Augment with 90 degr
 parser.add_option("--num_epochs", dest="num_epochs", help="Number of epochs.", default=2000)
 parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to store all the metadata related to the training (to be used when testing).",
-				default="config.json")
+				default="config.pickle")
+parser.add_option("--hyperparams_filename", dest="hyperparams_filename", help=
+				"Location to store all the hyperparms related to the training (to be used when testing).",
+				default="hyperparams.json")
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.")
 
@@ -128,14 +131,16 @@ model_classifier = Model([img_input, roi_input], classifier)
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)
 
-config_output_filename = options.config_filename
-with open(config_output_filename, 'wb') as config_f:
+with open(options.config_filename, 'wb') as config_f:
+        pickle.dump(C, config_f)
+
+with open(options.hyperparams_filename, 'wb') as hp_f:
         json.dump({
-                "config": C.to_json(),
-                "model_rpn": model_rpn.to_json(),
-                "model_classifier": model_classifier.to_json()
-        })
-	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
+                "model_rpn": json.loads(model_rpn.to_json()),
+                "model_classifier": json.loads(model_classifier.to_json())
+        }, hp_f)
+
+print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(options.config_filename))
 
 
 try:
