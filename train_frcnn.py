@@ -6,6 +6,7 @@ import time
 import numpy as np
 from optparse import OptionParser
 import pickle
+import json
 
 from keras import backend as K
 from keras.optimizers import Adam, SGD, RMSprop
@@ -32,7 +33,7 @@ parser.add_option("--rot", "--rot_90", dest="rot_90", help="Augment with 90 degr
 parser.add_option("--num_epochs", dest="num_epochs", help="Number of epochs.", default=2000)
 parser.add_option("--config_filename", dest="config_filename", help=
 				"Location to store all the metadata related to the training (to be used when testing).",
-				default="config.pickle")
+				default="config.json")
 parser.add_option("--output_weight_path", dest="output_weight_path", help="Output path for weights.", default='./model_frcnn.hdf5')
 parser.add_option("--input_weight_path", dest="input_weight_path", help="Input path for weights. If not specified, will try to load default weights provided by keras.")
 
@@ -90,12 +91,6 @@ print('Training images per class:')
 pprint.pprint(classes_count)
 print('Num classes (including bg) = {}'.format(len(classes_count)))
 
-config_output_filename = options.config_filename
-
-with open(config_output_filename, 'wb') as config_f:
-	pickle.dump(C,config_f)
-	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
-
 random.shuffle(all_imgs)
 
 num_imgs = len(all_imgs)
@@ -133,6 +128,16 @@ model_classifier = Model([img_input, roi_input], classifier)
 # this is a model that holds both the RPN and the classifier, used to load/save weights for the models
 model_all = Model([img_input, roi_input], rpn[:2] + classifier)
 
+config_output_filename = options.config_filename
+with open(config_output_filename, 'wb') as config_f:
+        json.dump({
+                "config": C.to_json(),
+                "model_rpn": model_rpn.to_json(),
+                "model_classifier": model_classifier.to_json()
+        })
+	print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(config_output_filename))
+
+
 try:
 	print('loading weights from {}'.format(C.base_net_weights))
 	model_rpn.load_weights(C.base_net_weights, by_name=True)
@@ -146,6 +151,8 @@ optimizer_classifier = Adam(lr=1e-5)
 model_rpn.compile(optimizer=optimizer, loss=[losses.rpn_loss_cls(num_anchors), losses.rpn_loss_regr(num_anchors)])
 model_classifier.compile(optimizer=optimizer_classifier, loss=[losses.class_loss_cls, losses.class_loss_regr(len(classes_count)-1)], metrics={'dense_class_{}'.format(len(classes_count)): 'accuracy'})
 model_all.compile(optimizer='sgd', loss='mae')
+
+# Config 
 
 epoch_length = 1000
 num_epochs = int(options.num_epochs)
