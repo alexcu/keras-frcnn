@@ -134,12 +134,6 @@ model_all = Model([img_input, roi_input], rpn[:2] + classifier)
 with open(options.config_filename, 'wb') as config_f:
         pickle.dump(C, config_f)
 
-with open(options.hyperparams_filename, 'wb') as hp_f:
-        json.dump({
-                "model_rpn": json.loads(model_rpn.to_json()),
-                "model_classifier": json.loads(model_classifier.to_json())
-        }, hp_f)
-
 print('Config has been written to {}, and can be loaded when testing to ensure correct results'.format(options.config_filename))
 
 

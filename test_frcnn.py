@@ -164,16 +164,16 @@ classifier = nn.classifier(
 model_rpn = Model(img_input, rpn_layers)
 model_classifier = Model([feature_map_input, roi_input], classifier)
 
-with open(options.hyperparams_filename, 'wb') as hp_f:
-            json.dump({"model_rpn": json.loads(model_rpn.to_json()),
-                       "model_classifier": json.loads(model_classifier.to_json())}, hp_f)
-
 print('Loading weights from {}'.format(C.model_path))
 model_rpn.load_weights(C.model_path, by_name=True)
 model_classifier.load_weights(C.model_path, by_name=True)
 
 model_rpn.compile(optimizer='sgd', loss='mse')
 model_classifier.compile(optimizer='sgd', loss='mse')
+
+with open(options.hyperparams_filename, 'wb') as hp_f:
+            json.dump({"model_rpn": json.loads(model_rpn.to_json()),
+                       "model_classifier": json.loads(model_classifier.to_json())}, hp_f)
 
 all_imgs = []
 
